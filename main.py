@@ -10,7 +10,7 @@ def home():
     return {
         "mensagem": "Hello World da API Python",
         "status": "online",
-        "origem": "FastAPI com Python 3.10"
+        "origem": "aaaaaaaaaaaaaaaaaa"
     }
 
 
