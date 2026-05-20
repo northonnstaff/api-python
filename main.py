@@ -6,7 +6,7 @@ import requests  # Biblioteca para fazer a requisição HTTP para o ORDS
 app = FastAPI()
 
 # URL que você gerou ativando o REST na tabela ng_cidade
-ORDS_URL = "https://geae26552a5af32-dbng.adb.sa-vinhedo-1.oraclecloudapps.com/ords/teste/ng_cidade/"
+ORDS_URL = "https://geae26552a5af32-dbng.adb.sa-vinhedo-1.oraclecloudapps.com/ords/teste/mae_sched_cfg/"
 
 @app.get("/")
 def home():
