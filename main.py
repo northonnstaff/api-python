@@ -40,8 +40,7 @@ def testar_conexao_direta():
         connection = oracledb.connect(
             user=DB_USER,
             password=DB_PASSWORD,
-            dsn=DB_DSN,
-            thin=True
+            dsn=DB_DSN
         )
         
         cursor = connection.cursor()
