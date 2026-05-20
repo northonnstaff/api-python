@@ -1,50 +1,73 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
-import requests  # Biblioteca para fazer a requisição HTTP para o ORDS
+import requests
+import os
+
+# --- IMPORTANTE: Importar o driver nativo da Oracle ---
+import oracledb 
 
 app = FastAPI()
 
-# URL que você gerou ativando o REST na tabela ng_cidade
-ORDS_URL = "https://geae26552a5af32-dbng.adb.sa-vinhedo-1.oraclecloudapps.com/ords/teste/mae_sched_cfg/"
+ORDS_URL = "https://geae26552a5af32-dbng.adb.sa-vinhedo-1.oraclecloudapps.com/ords/teste/ng_cidade/"
+
+# Configurações para a conexão direta
+DB_USER = "ADMIN"
+DB_PASSWORD = "SuaSenhaSeguraAqui"  # Substitua pela senha real do seu banco DBNG
+
+# String de conexão explícita baseada no seu banco DBNG em Vinhedo (Porta TCPS 1522)
+DB_DSN = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=adb.sa-vinhedo-1.oraclecloudapps.com)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=dbng_low.adb.oraclecloud.com)))"
+
 
 @app.get("/")
 def home():
-    return {
-        "mensagem": "Hello World da API Python",
-        "status": "online",
-        "origem": "aaaaaaaaaaaaaaaaaa"
-    }
+    return {"status": "online"}
 
-# --- NOVA ROTA PARA TESTAR A CONEXÃO COM O APEX/ORDS ---
 @app.get("/cidades")
 def listar_cidades():
+    # Sua rota antiga via ORDS (continua funcionando)
+    resposta = requests.get(ORDS_URL, timeout=10)
+    return resposta.json()
+
+
+# --- NOVA ROTA: TESTE DE CONEXÃO DIRETA (SQL) ---
+@app.get("/conexao-direta")
+def testar_conexao_direta():
+    connection = None
+    cursor = None
     try:
-        # O Python faz uma requisição GET segura (HTTPS) para a nuvem da Oracle
-        resposta = requests.get(ORDS_URL, timeout=10)
+        # Iniciando o oracledb no modo THIN (True) -> Dispensa Wallet e Instant Client
+        connection = oracledb.connect(
+            user=DB_USER,
+            password=DB_PASSWORD,
+            dsn=DB_DSN,
+            thin=True
+        )
         
-        # Se a Oracle retornar algum erro (ex: 404, 500), o Python captura aqui
-        resposta.raise_for_status()
-        
-        # Converte o resultado JSON vindo do banco de dados
-        dados_oracle = resposta.json()
-        
-        # O ORDS joga as linhas da tabela sempre dentro de uma chave chamada 'items'
-        linhas_da_tabela = dados_oracle.get("items", [])
+        cursor = connection.cursor()
+        # Executa um comando SQL direto no banco de dados
+        cursor.execute("SELECT banner FROM v$version WHERE rownum = 1")
+        versao_banco = cursor.fetchone()[0]
         
         return {
-            "status": "sucesso",
-            "origem": "Oracle Cloud (ORDS)",
-            "total_registros": len(linhas_da_tabela),
-            "dados": linhas_da_tabela
+            "status": "Sucesso",
+            "tipo_conexao": "Direta (python-oracledb Thin Mode)",
+            "mensagem": "Conexão estabelecida com sucesso sem uso de Wallet!",
+            "detalhes_do_banco": versao_banco,
+            "data_teste": datetime.now().isoformat()
         }
         
-    except requests.exceptions.RequestException as e:
-        # Se der erro de rede, timeout ou permissão, retorna o motivo para você debugar
+    except Exception as e:
         raise HTTPException(
-            status_code=500, 
-            detail=f"Erro ao conectar no Oracle APEX/ORDS: {str(e)}"
+            status_code=500,
+            detail=f"Falha na conexão direta com o banco: {str(e)}"
         )
+    finally:
+        # Garante que as conexões sempre serão fechadas para não estourar o limite do banco
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 @app.get("/hello")
 def hello(nome: str = "Oracle APEX"):
