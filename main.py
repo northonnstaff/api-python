@@ -13,7 +13,7 @@ ORDS_URL = "https://geae26552a5af32-dbng.adb.sa-vinhedo-1.oraclecloudapps.com/or
 
 # Configurações para a conexão direta
 DB_USER = "ADMIN"
-DB_PASSWORD = "SuaSenhaSeguraAqui"  # Substitua pela senha real do seu banco DBNG
+DB_PASSWORD = "StaffNgApex@654"  # Substitua pela senha real do seu banco DBNG
 
 # String de conexão explícita baseada no seu banco DBNG em Vinhedo (Porta TCPS 1522)
 DB_DSN = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=adb.sa-vinhedo-1.oraclecloudapps.com)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=dbng_low.adb.oraclecloud.com)))"
